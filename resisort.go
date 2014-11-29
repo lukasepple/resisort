@@ -92,7 +92,7 @@ func main() {
 			lastresistor = len(resistors) - 1
 		}
 
-		fmt.Printf("%dth Container: %s - %s\n", i + 1, FormatResistorValue(resistors[firstresistor]), FormatResistorValue(resistors[lastresistor]))
+		fmt.Printf("%dth Container: %10s - %10s\n", i + 1, FormatResistorValue(resistors[firstresistor]), FormatResistorValue(resistors[lastresistor]))
 	}
 }
 
@@ -156,7 +156,13 @@ func ReadResistors(filename string) []int {
 }
 
 func FormatResistorValue(value int) string {
-	// TODO: Improve this:
-	//       * use K and M for bigger stuff etc.
-	return fmt.Sprintf("%dΩ", value)
+	if value >= 1000000 {
+		// megaohm
+		return fmt.Sprintf("%.1fMΩ", float64(value) / 1000000.0)
+	} else if value >= 1000 {
+		// kiloohm
+		return fmt.Sprintf("%.1fKΩ", float64(value) / 1000.0)
+	} else {
+		return fmt.Sprintf("%dΩ", value)
+	}
 }
