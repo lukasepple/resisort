@@ -48,3 +48,6 @@ Enjoy!
 ## Fun Facts
 * resisort is an anagram of resistor
 * I spent more time on writing this program than I would have spent if I had tried to sort them by hand.
+
+## Free Software now sorts your resistors!
+resisort is published under the [GPLv3](./LICENSE)
