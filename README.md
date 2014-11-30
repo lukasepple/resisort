@@ -43,6 +43,7 @@ Enjoy!
 
 ## Wanted Features
 * support for color codes
+* systemd-integration [not interely seriously]
 
 ## Fun Facts
 * resisort is an anagram of resistor
