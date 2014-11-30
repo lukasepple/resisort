@@ -16,29 +16,27 @@ First you have to create a file of the resistor sizes you have. The sizes just h
 	33R
 	12K
 	4K7
-	4700
 	1M
-	12M2
 
 Now `resisort` can help you.
 
 * If you have some specific count of containers you can put the resistors into, specify the count with `--containers`
 * If you want to have a specific maximal count of resistor in one container, specify that with `--resistors-per-container`
-* without an option specify the filename
+* specify the filename with `--file`
 
-Like this: `resisort --containers 10 foo.txt` or `resisort --resistors-per-container 3 bar.txt`
+Like this: `resisort --containers 10 --file foo.txt` or `resisort --resistors-per-container 3 --file bar.txt`
 
 It will print out an nice scheme like this:
 
 	In order to sort 61 resistors you can use 8 container(s) with up to 8 resistor(s) each!
-	1th Container:        10Ω -        33Ω
-	2th Container:        39Ω -       150Ω
-	3th Container:       180Ω -       680Ω
-	4th Container:       820Ω -      3.9KΩ
-	5th Container:      4.7KΩ -     18.0KΩ
-	6th Container:     22.0KΩ -     82.0KΩ
-	7th Container:    100.0KΩ -    390.0KΩ
-	8th Container:    470.0KΩ -      1.0MΩ
+	1st Container:        10Ω -        39Ω
+	2nd Container:        47Ω -       180Ω
+	3rd Container:       220Ω -       820Ω
+	3th Container:      1.0KΩ -      3.9KΩ
+	4th Container:      4.7KΩ -     18.0KΩ
+	5th Container:     22.0KΩ -     82.0KΩ
+	6th Container:    100.0KΩ -    390.0KΩ
+	7th Container:    470.0KΩ -      1.0MΩ
 
 Enjoy!
 
