@@ -51,11 +51,6 @@ func main() {
 	flag.Parse()
 
 	// Now follows checking and checking
-	if filename == "" {
-		fmt.Fprintf(os.Stderr, "Please specify --file!\n")
-		os.Exit(1)
-	}
-
 	if xor(container_count > NOT_SPECIFIED, resistors_per_container > NOT_SPECIFIED) {
 		resistors := ReadResistors(filename)
 		var sorted []Container
@@ -78,13 +73,19 @@ func main() {
 }
 
 func ReadResistors(filename string) []int {
-	f, err := os.Open(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: Could not open file: %s", os.Args[0], err)
+	var f *os.File
+	var err error
+	if filename == "" {
+		f = os.Stdin
+	} else {
+		f, err = os.Open(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s: Could not open file: %s", os.Args[0], err)
+		}
+		defer f.Close()
 	}
-	defer f.Close()
 
-	resistors := make([]int, 0) // enough to hold a E12 set
+	resistors := make([]int, 0)
 	ResistorScanner := bufio.NewScanner(f)
 
 	for ResistorScanner.Scan() {
