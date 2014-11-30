@@ -22,7 +22,7 @@ Now `resisort` can help you.
 
 * If you have some specific count of containers you can put the resistors into, specify the count with `--containers`
 * If you want to have a specific maximal count of resistor in one container, specify that with `--resistors-per-container`
-* specify the filename with `--file`
+* You can specify the filename with `--file`. If not stdin is used
 
 Like this: `resisort --containers 10 --file foo.txt` or `resisort --resistors-per-container 3 --file bar.txt`
 
