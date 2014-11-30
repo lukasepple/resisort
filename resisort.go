@@ -19,6 +19,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"math"
 	"os"
@@ -27,95 +28,53 @@ import (
 	"unicode"
 )
 
+type Container struct {
+	Lowerbound int
+	Upperbound int
+}
+
 const (
-	TO_BE_DETERMINATED              = -1
-	DEFAULT_RESISTORS_PER_CONTAINER = 10
+	NOT_SPECIFIED = 0
 )
 
+var filename string
+var resistors_per_container int
+var container_count int
+
+func init() {
+	flag.IntVar(&resistors_per_container, "resistors-per-container", NOT_SPECIFIED, "How many resistors should be in one container maximally?")
+	flag.IntVar(&container_count, "containers", NOT_SPECIFIED, "Count of containers you can use")
+	flag.StringVar(&filename, "file", "", "The file to read from")
+}
+
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Too few arguments, try %s --help\n", os.Args[0])
+	flag.Parse()
+
+	// Now follows checking and checking
+	if filename == "" {
+		fmt.Fprintf(os.Stderr, "Please specify --file!\n")
 		os.Exit(1)
 	}
 
-	// arg parsing, not too elegant
-	// but simple
-	var filename string
-	resistors_per_container := 0
-	container_count := 0
+	if xor(container_count > NOT_SPECIFIED, resistors_per_container > NOT_SPECIFIED) {
+		resistors := ReadResistors(filename)
+		var sorted []Container
 
-	read_rpc := false
-	read_container_count := false
+		sorted, resistors_per_container, container_count = CalculateSorting(resistors, resistors_per_container,
+			container_count)
 
-	for _, Arg := range os.Args {
-		switch Arg {
-		case "--help":
-			PrintHelp()
-			break
-		case "--resistors-per-container":
-			read_rpc = true
-			break
-		case "--containers":
-			read_container_count = true
-			break
-		default:
-			if read_rpc {
-				var err error
-				resistors_per_container, err = strconv.Atoi(Arg)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%s: expected integer, got %s\n", os.Args[0], Arg)
-				}
-				read_rpc = false
-			} else if read_container_count {
-				resistors_per_container = TO_BE_DETERMINATED
-				var err error
-				container_count, err = strconv.Atoi(Arg)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%s: expected integer, got %s\n", os.Args[0], Arg)
-				}
-				read_container_count = false
-			} else {
-				filename = Arg
-			}
-		}
-	}
+		fmt.Printf("In order to sort %d resistors you can use %d container(s) with up to %d resistor(s) each!\n",
+			len(resistors), container_count, resistors_per_container)
 
-	resistors := ReadResistors(filename)
-
-
-	if resistors_per_container == 0 {
-		resistors_per_container = DEFAULT_RESISTORS_PER_CONTAINER
-	} else if resistors_per_container == TO_BE_DETERMINATED {
-		resistors_per_container = int(math.Ceil(float64(len(resistors)) / float64(container_count)))
-	}
-
-	if container_count == 0 {
-		container_count = int(math.Ceil(float64(len(resistors)) / float64(resistors_per_container)))
-	}
-
-	if container_count > len(resistors) {
-		container_count = len(resistors)
-	}
-
-	fmt.Printf("In order to sort %d resistors you can use %d container(s) with up to %d resistor(s) each!\n", len(resistors), container_count, resistors_per_container)
-
-	for i := 0; i < container_count; i++ {
-		// calculate the indices of the smallest and the biggest resistor
-		// in the group
-		firstresistor := i * resistors_per_container
-		lastresistor  := firstresistor + resistors_per_container - 1
-
-		if lastresistor >= len(resistors) {
-			lastresistor = len(resistors) - 1
+		for index, container := range sorted {
+			fmt.Printf("%s Container: %10s - %10s\n", IndexToEnglish(index), FormatResistorValue(container.Lowerbound),
+				FormatResistorValue(container.Upperbound))
 		}
 
-		fmt.Printf("%dth Container: %10s - %10s\n", i + 1, FormatResistorValue(resistors[firstresistor]), FormatResistorValue(resistors[lastresistor]))
+	} else {
+		fmt.Fprintf(os.Stderr, "%s: Either specify --containers or --resistors-per-container\n", os.Args[0])
+		os.Exit(1)
 	}
-}
-
-func PrintHelp() {
-	fmt.Fprintf(os.Stderr, "%s [(--containers | --resistors-per-container) int] filename\n", os.Args[0])
-	os.Exit(0)
 }
 
 func ReadResistors(filename string) []int {
@@ -129,38 +88,8 @@ func ReadResistors(filename string) []int {
 	ResistorScanner := bufio.NewScanner(f)
 
 	for ResistorScanner.Scan() {
-		resistor := ResistorScanner.Text()
-		convertable := ""
-		multiplier := 1.0
-
-		for _, char := range resistor {
-			if unicode.IsDigit(char) {
-				convertable += string(char)
-			} else if char == 'K' {
-				multiplier = 1000.0
-				convertable += "."
-			} else if char == 'M' {
-				multiplier = 1000000.0
-				convertable += "."
-			} else if char == '.' || char == ',' {
-				convertable += "."
-			} else if char == 'Ω' || char == 'R' {
-				convertable += "."
-			}
-		}
-
-		if convertable[len(convertable)-1] == '.' {
-			convertable = convertable[:len(convertable)-1]
-		}
-
-		resistor_value, err := strconv.ParseFloat(convertable, 64)
-		resistor_value = resistor_value * multiplier
-
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: expected to calculate an float but calculated %s! %s\n", os.Args[0], convertable, err)
-		}
-
-		resistors = append(resistors, int(resistor_value))
+		resistor_value := ParseResistorValue(ResistorScanner.Text())
+		resistors = append(resistors, resistor_value)
 	}
 
 	if err := ResistorScanner.Err(); err != nil {
@@ -172,14 +101,102 @@ func ReadResistors(filename string) []int {
 	return resistors
 }
 
+func CalculateSorting(resistors []int, resistors_per_container int, container_count int) (sorted []Container, new_rpc int, new_cc int) {
+
+	if resistors_per_container <= NOT_SPECIFIED {
+		new_rpc = int(math.Ceil(float64(len(resistors)) / float64(container_count)))
+	} else {
+		new_rpc = resistors_per_container
+	}
+
+	// always (re)calculate the container count because
+	// we can't use floating point resistors!
+	new_cc = int(math.Ceil(float64(len(resistors)) / float64(new_rpc)))
+
+	if container_count > len(resistors) {
+		new_cc = len(resistors)
+	}
+
+	sorted = make([]Container, 0)
+
+	for i := 0; i < new_cc; i++ {
+		// calculate the indices of the smallest and the biggest resistor
+		// in the group
+		var container Container
+		firstresistor := i * new_rpc
+		lastresistor := firstresistor + new_rpc - 1
+
+		if lastresistor >= len(resistors) {
+			lastresistor = len(resistors) - 1
+		}
+
+		container.Lowerbound = resistors[firstresistor]
+		container.Upperbound = resistors[lastresistor]
+
+		sorted = append(sorted, container)
+	}
+
+	return sorted, new_rpc, new_cc
+}
+
+func ParseResistorValue(resistor string) int {
+	convertable := ""
+	multiplier := 1.0
+
+	for _, char := range resistor {
+		if unicode.IsDigit(char) {
+			convertable += string(char)
+		} else if char == 'K' || char == 'k' {
+			multiplier = 1000.0
+			convertable += "."
+		} else if char == 'M' || char == 'm' {
+			multiplier = 1000000.0
+			convertable += "."
+		} else if char == '.' || char == ',' {
+			convertable += "."
+		} else if char == 'Ω' || char == 'R' || char == 'r' {
+			break
+		}
+	}
+
+	if convertable[len(convertable)-1] == '.' {
+		convertable = convertable[:len(convertable)-1]
+	}
+
+	resistor_value, err := strconv.ParseFloat(convertable, 64)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: expected to calculate an float but calculated %s! %s\n", os.Args[0], convertable, err)
+		os.Exit(1)
+	}
+	resistor_value = resistor_value * multiplier
+
+	return int(resistor_value)
+}
+
 func FormatResistorValue(value int) string {
 	if value >= 1000000 {
 		// megaohm
-		return fmt.Sprintf("%.1fMΩ", float64(value) / 1000000.0)
+		return fmt.Sprintf("%.1fMΩ", float64(value)/1000000.0)
 	} else if value >= 1000 {
 		// kiloohm
-		return fmt.Sprintf("%.1fKΩ", float64(value) / 1000.0)
+		return fmt.Sprintf("%.1fKΩ", float64(value)/1000.0)
 	} else {
 		return fmt.Sprintf("%dΩ", value)
+	}
+}
+
+func xor(a bool, b bool) bool {
+	return (a || b) && !(a && b)
+}
+
+func IndexToEnglish(index int) string {
+	if index == 0 {
+		return "1st"
+	} else if index == 1 {
+		return "2nd"
+	} else if index == 2 {
+		return "3rd"
+	} else {
+		return fmt.Sprintf("%dth", index)
 	}
 }
