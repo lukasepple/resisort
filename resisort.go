@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 	"unicode"
+	humanize "github.com/dustin/go-humanize"
 )
 
 type Container struct {
@@ -50,7 +51,6 @@ func init() {
 func main() {
 	flag.Parse()
 
-	// Now follows checking and checking
 	if xor(container_count > NOT_SPECIFIED, resistors_per_container > NOT_SPECIFIED) {
 		resistors := ReadResistors(filename)
 		var sorted []Container
@@ -62,8 +62,8 @@ func main() {
 			len(resistors), container_count, resistors_per_container)
 
 		for index, container := range sorted {
-			fmt.Printf("%s Container: %10s - %10s\n", IndexToEnglish(index), FormatResistorValue(container.Lowerbound),
-				FormatResistorValue(container.Upperbound))
+			fmt.Printf("%5s Container: %10s - %10s\n", humanize.Ordinal(index + 1),
+				FormatResistorValue(container.Lowerbound), FormatResistorValue(container.Upperbound))
 		}
 
 	} else {
@@ -177,10 +177,10 @@ func ParseResistorValue(resistor string) int {
 func FormatResistorValue(value int) string {
 	if value >= 1000000 {
 		// megaohm
-		return fmt.Sprintf("%.1fMΩ", float64(value)/1000000.0)
+		return fmt.Sprintf("%sMΩ", humanize.Ftoa(float64(value)/1000000.0))
 	} else if value >= 1000 {
 		// kiloohm
-		return fmt.Sprintf("%.1fKΩ", float64(value)/1000.0)
+		return fmt.Sprintf("%sKΩ", humanize.Ftoa(float64(value)/1000.0))
 	} else {
 		return fmt.Sprintf("%dΩ", value)
 	}
@@ -188,16 +188,4 @@ func FormatResistorValue(value int) string {
 
 func xor(a bool, b bool) bool {
 	return (a || b) && !(a && b)
-}
-
-func IndexToEnglish(index int) string {
-	if index == 0 {
-		return "1st"
-	} else if index == 1 {
-		return "2nd"
-	} else if index == 2 {
-		return "3rd"
-	} else {
-		return fmt.Sprintf("%dth", index)
-	}
 }

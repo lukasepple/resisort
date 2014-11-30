@@ -28,15 +28,16 @@ Like this: `resisort --containers 10 --file foo.txt` or `resisort --resistors-pe
 
 It will print out an nice scheme like this:
 
-	In order to sort 61 resistors you can use 8 container(s) with up to 8 resistor(s) each!
-	1st Container:        10Ω -        39Ω
-	2nd Container:        47Ω -       180Ω
-	3rd Container:       220Ω -       820Ω
-	3th Container:      1.0KΩ -      3.9KΩ
-	4th Container:      4.7KΩ -     18.0KΩ
-	5th Container:     22.0KΩ -     82.0KΩ
-	6th Container:    100.0KΩ -    390.0KΩ
-	7th Container:    470.0KΩ -      1.0MΩ
+	In order to sort 61 resistors you can use 9 container(s) with up to 7 resistor(s) each!
+	  1st Container:        10Ω -        33Ω
+	  2nd Container:        39Ω -       120Ω
+	  3rd Container:       150Ω -       470Ω
+	  4th Container:       560Ω -      1.8KΩ
+	  5th Container:      2.2KΩ -      6.8KΩ
+	  6th Container:      8.2KΩ -       27KΩ
+	  7th Container:       33KΩ -      100KΩ
+	  8th Container:      120KΩ -      390KΩ
+	  9th Container:      470KΩ -        1MΩ
 
 Enjoy!
 
